@@ -51,18 +51,6 @@ var toCmd = &cobra.Command{
 			fmt.Println("No host available!")
 			os.Exit(0)
 		}
-
-		//import "strcov"
-		//
-		//var u uint32 = 17
-		//var s = strconv.FormatUint(uint64(u), 10)
-		// "17"
-		//SshServer.Id, err = strconv.ParseUint(args[0], 10, 32)
-		//SshServer.Id = strconv.ParseUint()
-		//fmt.Println(fmt.Sprint(SshServer.Id) + "22")
-		//fmt.Println("Print: " + args[0])
-		//fmt.Println("Print: " + strings.Join(args, " "))
-
 	},
 }
 
@@ -75,18 +63,14 @@ func init() {
 	// toCmd.PersistentFlags().String("foo", "", "A help for foo")
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	//toCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-	//toCmd.Flags().BoolP("copy", "i", false, "Help message for toggle")
 	toCmd.Flags().BoolVarP(&copySshId,"copy","i",false,"222")
 	viper.BindPFlag("copy", toCmd.Flags().Lookup("copy"))
-	viper.SetDefault("copy",false)  // 控制标签的默认值，flags 定义的默认值则不在生效。
+	viper.SetDefault("copy",false)
 	//toCmd.PersistentFlags().Bool("copy", true, "Use Viper for configuration")
 
 }
 
 func GetServer() bool {
-	// 用户当前用的配置
-
 	SshTmpServer = SshServer
 
 	var sql string
@@ -98,19 +82,15 @@ func GetServer() bool {
 	//fmt.Println(sql)
 	rows, err := DbDriver.Query(sql)
 	checkErr(err)
-	defer rows.Close() // 果然在多次操作 db 时会锁库
+	defer rows.Close()
 	for rows.Next() {
 
-		// fmt.Println(SshTmpServer.Port)
-		// Scan 可根据字段插入
 		err = rows.Scan(&SshServer.Id, &SshServer.User, &SshServer.Alias, &SshServer.Port, &SshServer.Host, &SshServer.Password, &SshServer.Description, &SshServer.Count)
 		checkErr(err)
-		//fmt.Println(SshServer.Id)
 
 		if SshTmpServer.User != "" && SshTmpServer.User != SshServer.User {
 			SshServer.User = SshTmpServer.User
 		}
-		//fmt.Println(SshTmpServer.Port)
 
 		if SshTmpServer.Port > 0 && SshTmpServer.Port != SshServer.Port {
 			SshServer.Port = SshTmpServer.Port
@@ -162,7 +142,6 @@ func showServers() {
 		fmt.Println("No valid server record")
 		return
 	}
-	//fmt.Println(ServerList)
 	table.Output(ServerList)
 	//table.OutputA(ServerList)
 	s := table.Table(ServerList)
@@ -171,35 +150,13 @@ func showServers() {
 }
 
 func updataServer() {
-	//=========================更新操作============================
-	// username,alias,port,host,password,description,used_count
 	stmt2, err := DbDriver.Prepare("update servers set username=?,alias=?,port=?,host=?,password=?,description=?,used_count=used_count+1 where id=?")
 	checkErr(err)
 	res, err := stmt2.Exec(SshServer.User, SshServer.Alias, SshServer.Port, SshServer.Host, SshServer.Password, SshServer.Description, SshServer.Id)
 	checkErr(err)
 
-	// 返回受影响的行数
-	//affect, err := res.RowsAffected()
 	affect, err := res.RowsAffected()
 	checkErr(err)
 	_ = affect
-	//fmt.Println(affect)
-	//fmt.Println(res)
 }
 
-//func showSelectors(selector string) {
-//	//fmt.Println(selector)
-//
-//	db, err := sql.Open("sqlite3", DatabasePath)
-//	checkErr(err)
-//
-//	rows, err := db.Query("select * from serverinfo where id='" + selector + "' or alias like '%" + selector + "%'")
-//	checkErr(err)
-//
-//	for rows.Next() {
-//		err = rows.Scan(&id, &alias, &username, &ip, &port, &created)
-//		checkErr(err)
-//		fmt.Println(id, alias, username, ip, port, created)
-//		return
-//	}
-//}

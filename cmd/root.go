@@ -34,16 +34,11 @@ var rootCmd = &cobra.Command{
 	Short: "Iserver tool",
 	Long:  `Iserver is a tool for managing ssh servers.`,
 	Run: func(cmd *cobra.Command, args []string) {
-
-		//fmt.Println("rootCmd called")
-
-		//fmt.Println("Print: " + strings.Join(args, " "))
 		if SshServer.Id > 0 {
 			delSshServer()
 			os.Exit(0)
 		}
 		cmd.Help()
-
 		//os.Exit(0)
 	},
 	// Uncomment the following line if your bare application
@@ -70,20 +65,11 @@ var exportServer bool
 var copySshId bool
 
 var DbDriver *sql.DB
-//fmt.Printf("%s", os.UserHomeDir())
-//fmt.Printf("%s", os.TempDir())
 
 const (
 	DataSourceName = "iserver.sqlite"
 	UserDir        = string(os.PathSeparator) + "user" + string(os.PathSeparator) // 注册用户
 	DatabaseName   = "servers"
-	TimeFormat     = "2006/1/2"
-	BeignTime      = 1551369600
-	SoLikeU        = 1525795200
-	MangoName      = ""
-	MangoAvatar    = ""
-	XzkName        = ""
-	XzkAvatar      = ""
 	FilePath       = "/Users/leili/"
 )
 
@@ -121,50 +107,35 @@ func init() {
 	rootCmd.PersistentFlags().StringVarP(&SshServer.Description, "description", "d", "", "Description.")
 	rootCmd.PersistentFlags().Uint16VarP(&SshServer.Port, "port", "p", 0, "Port to connect to on the remote host.  This can be specified on a per-host basis in the configuration file.")
 
-	//rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.iserver.yaml)")
-	// Cobra also supports local flags, which will only run
-	// when this action is called directly.
-	//rootCmd.Flags().Uint32VarP(&SshServer.Id, "del", "D", 0, "Delete host record")
 	rootCmd.Flags().Uint32Var(&SshServer.Id, "delete", 0, "Delete host record")
-	//rootCmd.Flags().Uint32Var(&SshServer.Id, "export", 0, "Delete host record")
 }
 
-// initConfig reads in config file and ENV variables if set.
 func initConfig() {
 	if cfgFile != "" {
-		// Use config file from the flag.
 		viper.SetConfigFile(cfgFile)
 	} else {
-		// Find home directory.
 		home, err := homedir.Dir()
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
 
-		// Search config in home directory with name ".iserver" (without extension).
 		viper.AddConfigPath(home)
 		viper.SetConfigName(".iserver")
 	}
 
-	viper.AutomaticEnv() // read in environment variables that match
-
-	// If a config file is found, read it in.
+	viper.AutomaticEnv()
+	// read in environment variables that match
 	if err := viper.ReadInConfig(); err == nil {
 		fmt.Println("Using config file:", viper.ConfigFileUsed())
 	}
 }
 
-// 初始化db
 func initSqliteDb() {
-	//db, err := sql.Open("sqlite3", DataSourceName)
-	//checkErr(err)
-
 	res, err := DbDriver.Query("select name from sqlite_master where name='" + DatabaseName + "'")
 	checkErr(err)
 
 	if !res.Next() {
-		// 实际上一步可以省略
 		sqlTable := `
         CREATE TABLE IF NOT EXISTS servers (
             id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
@@ -184,33 +155,20 @@ func initSqliteDb() {
 	}
 }
 
-// https://blog.csdn.net/LOVETEDA/article/details/82690498
 func saveSshServer() int64 {
-	//db, err := sql.Open("sqlite3", DataSourceName)
-	//checkErr(err)
 	stmt, err := DbDriver.Prepare("insert into servers(username,alias,port,host,password,description,created_at,updated_at) values(?,?,?,?,?,?,?,?)")
 	checkErr(err)
-
-	// func (s *Stmt) Exec(args ...interface{}) (Result, error)
-	// Exec使用提供的参数执行准备好的命令状态，返回Result类型的该状态执行结果的总结。
-	// result类型为接口，有两个方法：
-	// LastInsertId() (int64, error)
-	// RowsAffected() (int64, error)
-	
 	if SshServer.Port == 0 {
 		SshServer.Port = 22
 	}
 	res, err := stmt.Exec(SshServer.User, SshServer.Alias, SshServer.Port, SshServer.Host, SshServer.Password, SshServer.Description, time.Now().Unix(), time.Now().Unix())
 	checkErr(err)
 	if err != nil {
-		//fmt.Println(time.Now())
-		//fmt.Println(err.Error())
 		stmt.Close()
 	}
 	// RowsAffected() (int64, error)
 	id, err := res.LastInsertId()
 	checkErr(err)
-	// 打印出受影响的id号
 	//DbDriver.Close()
 	return id
 }
