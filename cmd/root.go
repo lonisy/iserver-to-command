@@ -39,11 +39,7 @@ var rootCmd = &cobra.Command{
 			os.Exit(0)
 		}
 		cmd.Help()
-		//os.Exit(0)
 	},
-	// Uncomment the following line if your bare application
-	// has an action associated with it:
-	//	Run: func(cmd *cobra.Command, args []string) { },
 }
 
 type Server struct {
@@ -68,9 +64,8 @@ var DbDriver *sql.DB
 
 const (
 	DataSourceName = "iserver.sqlite"
-	UserDir        = string(os.PathSeparator) + "user" + string(os.PathSeparator) // 注册用户
 	DatabaseName   = "servers"
-	FilePath       = "/Users/leili/"
+	UserDir        = string(os.PathSeparator) + "user" + string(os.PathSeparator) // 注册用户
 )
 
 // Execute adds all child commands to the root command and sets flags appropriately.

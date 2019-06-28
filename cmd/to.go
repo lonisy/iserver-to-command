@@ -34,12 +34,11 @@ var toCmd = &cobra.Command{
 
 		if len(args) != 1 {
 			showServers()
-			//cmd.Help()
 			os.Exit(0)
 		}
-		Id, _ := strconv.ParseUint(args[0], 10, 32) //第一个参数是需要转换的字符串, 第二个是进制(二进制, 八进制...), 第三个是bit大小(int8,int16...)
+		Id, _ := strconv.ParseUint(args[0], 10, 32)
 		if Id > 0 {
-			SshServer.Id = uint32(Id) // 强制转换
+			SshServer.Id = uint32(Id)
 		} else {
 			SshServer.Alias = args[0]
 		}
