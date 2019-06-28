@@ -1,0 +1,205 @@
+/*
+Copyright © 2019 NAME HERE <EMAIL ADDRESS>
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+package cmd
+
+import (
+	"fmt"
+	"github.com/modood/table"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+	"os"
+	"strconv"
+)
+
+
+// toCmd represents the to command
+var toCmd = &cobra.Command{
+	Use:   "to [Id|Alias]",
+	Short: "Quickly connect to the server.",
+	Long:  `Quickly connect to the server.`,
+	Run: func(cmd *cobra.Command, args []string) {
+
+		if len(args) != 1 {
+			showServers()
+			//cmd.Help()
+			os.Exit(0)
+		}
+		Id, _ := strconv.ParseUint(args[0], 10, 32) //第一个参数是需要转换的字符串, 第二个是进制(二进制, 八进制...), 第三个是bit大小(int8,int16...)
+		if Id > 0 {
+			SshServer.Id = uint32(Id) // 强制转换
+		} else {
+			SshServer.Alias = args[0]
+		}
+
+		if GetServer() == true {
+			updataServer()
+			toServer()
+		} else {
+			fmt.Println("No host available!")
+			os.Exit(0)
+		}
+
+		//import "strcov"
+		//
+		//var u uint32 = 17
+		//var s = strconv.FormatUint(uint64(u), 10)
+		// "17"
+		//SshServer.Id, err = strconv.ParseUint(args[0], 10, 32)
+		//SshServer.Id = strconv.ParseUint()
+		//fmt.Println(fmt.Sprint(SshServer.Id) + "22")
+		//fmt.Println("Print: " + args[0])
+		//fmt.Println("Print: " + strings.Join(args, " "))
+
+	},
+}
+
+func init() {
+	rootCmd.AddCommand(toCmd)
+
+	// Here you will define your flags and configuration settings.
+	// Cobra supports Persistent Flags which will work for this command
+	// and all subcommands, e.g.:
+	// toCmd.PersistentFlags().String("foo", "", "A help for foo")
+	// Cobra supports local flags which will only run when this command
+	// is called directly, e.g.:
+	//toCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	//toCmd.Flags().BoolP("copy", "i", false, "Help message for toggle")
+	toCmd.Flags().BoolVarP(&copySshId,"copy","i",false,"222")
+	viper.BindPFlag("copy", toCmd.Flags().Lookup("copy"))
+	viper.SetDefault("copy",false)  // 控制标签的默认值，flags 定义的默认值则不在生效。
+	//toCmd.PersistentFlags().Bool("copy", true, "Use Viper for configuration")
+
+}
+
+func GetServer() bool {
+	// 用户当前用的配置
+
+	SshTmpServer = SshServer
+
+	var sql string
+	if SshServer.Id > 0 {
+		sql = "select id,username,alias,port,host,password,description,used_count from servers where id='" + fmt.Sprint(SshServer.Id) + "' limit 1"
+	} else {
+		sql = "select id,username,alias,port,host,password,description,used_count from servers where alias like '%" + SshServer.Alias + "%' limit 1"
+	}
+	//fmt.Println(sql)
+	rows, err := DbDriver.Query(sql)
+	checkErr(err)
+	defer rows.Close() // 果然在多次操作 db 时会锁库
+	for rows.Next() {
+
+		// fmt.Println(SshTmpServer.Port)
+		// Scan 可根据字段插入
+		err = rows.Scan(&SshServer.Id, &SshServer.User, &SshServer.Alias, &SshServer.Port, &SshServer.Host, &SshServer.Password, &SshServer.Description, &SshServer.Count)
+		checkErr(err)
+		//fmt.Println(SshServer.Id)
+
+		if SshTmpServer.User != "" && SshTmpServer.User != SshServer.User {
+			SshServer.User = SshTmpServer.User
+		}
+		//fmt.Println(SshTmpServer.Port)
+
+		if SshTmpServer.Port > 0 && SshTmpServer.Port != SshServer.Port {
+			SshServer.Port = SshTmpServer.Port
+		}
+
+		if SshTmpServer.Alias != "" && SshTmpServer.Alias != SshServer.Alias {
+			SshServer.Alias = SshTmpServer.Alias
+		}
+
+		if SshTmpServer.Host != "" && SshTmpServer.Host != SshServer.Host {
+			SshServer.Host = SshTmpServer.Host
+		}
+
+		if SshTmpServer.Password != "" && SshTmpServer.Password != SshServer.Password {
+			SshServer.Password = SshTmpServer.Password
+		}
+
+		if SshTmpServer.Description != "" && SshTmpServer.Description != SshServer.Description {
+			SshServer.Description = SshTmpServer.Description
+		}
+
+		//fmt.Println(SshServer)
+		return true
+	}
+
+	return false
+}
+
+func showServers() {
+	sql := "select id,username,alias,port,host,password,description,used_count from servers order by used_count desc"
+	//fmt.Println(sql)
+	rows, err := DbDriver.Query(sql)
+	defer rows.Close()
+	checkErr(err)
+
+	ServerList := make([]Server, 0)
+	for rows.Next() {
+		var CurServer Server
+
+		err = rows.Scan(&CurServer.Id, &CurServer.User, &CurServer.Alias, &CurServer.Port, &CurServer.Host, &CurServer.Password, &CurServer.Description, &CurServer.Count)
+		if len(CurServer.Password) > 6 {
+			CurServer.Password = CurServer.Password[0:6] + "***"
+		}
+		checkErr(err)
+		ServerList = append(ServerList, CurServer)
+	}
+
+	if len(ServerList) == 0 {
+		fmt.Println("No valid server record")
+		return
+	}
+	//fmt.Println(ServerList)
+	table.Output(ServerList)
+	//table.OutputA(ServerList)
+	s := table.Table(ServerList)
+	_ = s
+	return
+}
+
+func updataServer() {
+	//=========================更新操作============================
+	// username,alias,port,host,password,description,used_count
+	stmt2, err := DbDriver.Prepare("update servers set username=?,alias=?,port=?,host=?,password=?,description=?,used_count=used_count+1 where id=?")
+	checkErr(err)
+	res, err := stmt2.Exec(SshServer.User, SshServer.Alias, SshServer.Port, SshServer.Host, SshServer.Password, SshServer.Description, SshServer.Id)
+	checkErr(err)
+
+	// 返回受影响的行数
+	//affect, err := res.RowsAffected()
+	affect, err := res.RowsAffected()
+	checkErr(err)
+	_ = affect
+	//fmt.Println(affect)
+	//fmt.Println(res)
+}
+
+//func showSelectors(selector string) {
+//	//fmt.Println(selector)
+//
+//	db, err := sql.Open("sqlite3", DatabasePath)
+//	checkErr(err)
+//
+//	rows, err := db.Query("select * from serverinfo where id='" + selector + "' or alias like '%" + selector + "%'")
+//	checkErr(err)
+//
+//	for rows.Next() {
+//		err = rows.Scan(&id, &alias, &username, &ip, &port, &created)
+//		checkErr(err)
+//		fmt.Println(id, alias, username, ip, port, created)
+//		return
+//	}
+//}
