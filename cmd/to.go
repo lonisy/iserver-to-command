@@ -76,9 +76,9 @@ func GetServer() bool {
 
 	var sql string
 	if SshServer.Id > 0 {
-		sql = "select id,username,alias,port,host,password,description,used_count from servers where id='" + fmt.Sprint(SshServer.Id) + "' or alias like '%" + fmt.Sprint(SshServer.Id) + "%' limit 1"
+		sql = "select id,username,alias,port,host,password,description,tags,used_count from servers where id='" + fmt.Sprint(SshServer.Id) + "' or alias like '%" + fmt.Sprint(SshServer.Id) + "%' limit 1"
 	} else {
-		sql = "select id,username,alias,port,host,password,description,used_count from servers where alias like '%" + SshServer.Alias + "%' limit 1"
+		sql = "select id,username,alias,port,host,password,description,tags,used_count from servers where alias like '%" + SshServer.Alias + "%' limit 1"
 	}
 	//fmt.Println(sql)
 	rows, err := DbDriver.Query(sql)
@@ -86,7 +86,7 @@ func GetServer() bool {
 	defer rows.Close()
 	for rows.Next() {
 
-		err = rows.Scan(&SshServer.Id, &SshServer.User, &SshServer.Alias, &SshServer.Port, &SshServer.Host, &SshServer.Password, &SshServer.Description, &SshServer.Count)
+		err = rows.Scan(&SshServer.Id, &SshServer.User, &SshServer.Alias, &SshServer.Port, &SshServer.Host, &SshServer.Password, &SshServer.Description, &SshServer.Tags, &SshServer.Count)
 		checkErr(err)
 
 		if SshTmpServer.User != "" && SshTmpServer.User != SshServer.User {
@@ -113,6 +113,9 @@ func GetServer() bool {
 			SshServer.Description = SshTmpServer.Description
 		}
 
+		if SshTmpServer.Tags != "" && SshTmpServer.Tags != SshServer.Tags {
+			SshServer.Tags = SshTmpServer.Tags
+		}
 		//fmt.Println(SshServer)
 		return true
 	}
