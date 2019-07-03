@@ -74,7 +74,7 @@ func GetServer() bool {
 
 	var sql string
 	if SshServer.Id > 0 {
-		sql = "select id,username,alias,port,host,password,description,used_count from servers where id='" + fmt.Sprint(SshServer.Id) + "' limit 1"
+		sql = "select id,username,alias,port,host,password,description,used_count from servers where id='" + fmt.Sprint(SshServer.Id) + "' or alias like '%" + fmt.Sprint(SshServer.Id) + "%' limit 1"
 	} else {
 		sql = "select id,username,alias,port,host,password,description,used_count from servers where alias like '%" + SshServer.Alias + "%' limit 1"
 	}
@@ -119,7 +119,7 @@ func GetServer() bool {
 }
 
 func showServers() {
-	sql := "select id,username,alias,port,host,password,description,used_count from servers order by used_count desc"
+	sql := "select id,username,alias,port,host,password,description,used_count,tags from servers order by tags, used_count desc"
 	//fmt.Println(sql)
 	rows, err := DbDriver.Query(sql)
 	defer rows.Close()
@@ -129,7 +129,7 @@ func showServers() {
 	for rows.Next() {
 		var CurServer Server
 
-		err = rows.Scan(&CurServer.Id, &CurServer.User, &CurServer.Alias, &CurServer.Port, &CurServer.Host, &CurServer.Password, &CurServer.Description, &CurServer.Count)
+		err = rows.Scan(&CurServer.Id, &CurServer.User, &CurServer.Alias, &CurServer.Port, &CurServer.Host, &CurServer.Password, &CurServer.Description, &CurServer.Count,&CurServer.Tags)
 		if len(CurServer.Password) > 6 {
 			CurServer.Password = CurServer.Password[0:6] + "***"
 		}
@@ -149,11 +149,11 @@ func showServers() {
 }
 
 func updataServer() {
-	stmt2, err := DbDriver.Prepare("update servers set username=?,alias=?,port=?,host=?,password=?,description=?,used_count=used_count+1 where id=?")
+	stmt2, err := DbDriver.Prepare("update servers set username=?,alias=?,port=?,host=?,password=?,description=?,tags=?,used_count=used_count+1 where id=?")
 	checkErr(err)
-	res, err := stmt2.Exec(SshServer.User, SshServer.Alias, SshServer.Port, SshServer.Host, SshServer.Password, SshServer.Description, SshServer.Id)
+	res, err := stmt2.Exec(SshServer.User, SshServer.Alias, SshServer.Port, SshServer.Host, SshServer.Password, SshServer.Description, SshServer.Tags, SshServer.Id)
 	checkErr(err)
-
+	defer stmt2.Close()
 	affect, err := res.RowsAffected()
 	checkErr(err)
 	_ = affect

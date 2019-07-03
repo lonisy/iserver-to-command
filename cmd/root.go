@@ -49,6 +49,7 @@ type Server struct {
 	User        string
 	Host        string
 	Password    string
+	Tags        string
 	Description string
 	Count       uint32
 }
@@ -96,6 +97,7 @@ func init() {
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
 	rootCmd.PersistentFlags().StringVarP(&SshServer.Alias, "alias", "a", "", "host alias.")
+	rootCmd.PersistentFlags().StringVarP(&SshServer.Tags, "tags", "t", "", "host tags.")
 	rootCmd.PersistentFlags().StringVarP(&SshServer.User, "user", "u", "", "user.")
 	rootCmd.PersistentFlags().StringVarP(&SshServer.Host, "host", "l", "", "host.")
 	rootCmd.PersistentFlags().StringVarP(&SshServer.Password, "passwd", "P", "", "password.")
@@ -129,7 +131,7 @@ func initConfig() {
 func initSqliteDb() {
 	res, err := DbDriver.Query("select name from sqlite_master where name='" + DatabaseName + "'")
 	checkErr(err)
-
+	defer res.Close()
 	if !res.Next() {
 		sqlTable := `
         CREATE TABLE IF NOT EXISTS servers (
@@ -140,27 +142,27 @@ func initSqliteDb() {
             host VARCHAR(255)  NOT NULL DEFAULT '',
             password VARCHAR(255)  NOT NULL DEFAULT '',
             description VARCHAR(255)  NOT NULL DEFAULT '',
+            tags VARCHAR(64) NOT NULL DEFAULT '',
             used_count INT(11) NOT NULL DEFAULT '0',
             created_at INT(11) NOT NULL DEFAULT '0',
             updated_at INT(11) NOT NULL DEFAULT '0'
         );`
 		DbDriver.Exec(sqlTable)
-	} else {
-		res.Close()
 	}
 }
 
 func saveSshServer() int64 {
-	stmt, err := DbDriver.Prepare("insert into servers(username,alias,port,host,password,description,created_at,updated_at) values(?,?,?,?,?,?,?,?)")
+	stmt, err := DbDriver.Prepare("insert into servers(username,alias,port,host,password,description,tags,created_at,updated_at) values(?,?,?,?,?,?,?,?,?)")
 	checkErr(err)
 	if SshServer.Port == 0 {
 		SshServer.Port = 22
 	}
-	res, err := stmt.Exec(SshServer.User, SshServer.Alias, SshServer.Port, SshServer.Host, SshServer.Password, SshServer.Description, time.Now().Unix(), time.Now().Unix())
+	res, err := stmt.Exec(SshServer.User, SshServer.Alias, SshServer.Port, SshServer.Host, SshServer.Password, SshServer.Description,SshServer.Tags, time.Now().Unix(), time.Now().Unix())
 	checkErr(err)
-	if err != nil {
-		stmt.Close()
-	}
+	defer stmt.Close()
+	//if err != nil {
+	//	stmt.Close()
+	//}
 	// RowsAffected() (int64, error)
 	id, err := res.LastInsertId()
 	checkErr(err)
@@ -174,6 +176,7 @@ func delSshServer() bool {
 		stmt3, err := DbDriver.Prepare("delete from servers where id=?")
 		checkErr(err)
 		res, err := stmt3.Exec(SshServer.Id)
+		defer stmt3.Close()
 		checkErr(err)
 		affect2, err := res.RowsAffected()
 		checkErr(err)
