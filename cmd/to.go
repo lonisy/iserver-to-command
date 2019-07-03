@@ -32,6 +32,8 @@ var toCmd = &cobra.Command{
 	Long:  `Quickly connect to the server.`,
 	Run: func(cmd *cobra.Command, args []string) {
 
+		initSqliteDb()
+
 		if len(args) != 1 {
 			showServers()
 			os.Exit(0)
