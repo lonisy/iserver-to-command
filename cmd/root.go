@@ -64,7 +64,7 @@ var copySshId bool
 var DbDriver *sql.DB
 
 const (
-	DataSourceName = "iserver.sqlite"
+	DataSourceName = ".iserver.sqlite"
 	DatabaseName   = "servers"
 	UserDir        = string(os.PathSeparator) + "user" + string(os.PathSeparator) // 注册用户
 )

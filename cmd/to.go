@@ -24,7 +24,6 @@ import (
 	"strconv"
 )
 
-
 // toCmd represents the to command
 var toCmd = &cobra.Command{
 	Use:   "to [Id|Alias]",
@@ -64,9 +63,9 @@ func init() {
 	// toCmd.PersistentFlags().String("foo", "", "A help for foo")
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	toCmd.Flags().BoolVarP(&copySshId,"copy","i",false,"222")
+	toCmd.Flags().BoolVarP(&copySshId, "copy", "i", false, "222")
 	viper.BindPFlag("copy", toCmd.Flags().Lookup("copy"))
-	viper.SetDefault("copy",false)
+	viper.SetDefault("copy", false)
 	//toCmd.PersistentFlags().Bool("copy", true, "Use Viper for configuration")
 
 }
@@ -134,7 +133,7 @@ func showServers() {
 	for rows.Next() {
 		var CurServer Server
 
-		err = rows.Scan(&CurServer.Id, &CurServer.User, &CurServer.Alias, &CurServer.Port, &CurServer.Host, &CurServer.Password, &CurServer.Description, &CurServer.Count,&CurServer.Tags)
+		err = rows.Scan(&CurServer.Id, &CurServer.User, &CurServer.Alias, &CurServer.Port, &CurServer.Host, &CurServer.Password, &CurServer.Description, &CurServer.Count, &CurServer.Tags)
 		if len(CurServer.Password) > 6 {
 			CurServer.Password = CurServer.Password[0:6] + "***"
 		}
@@ -163,4 +162,3 @@ func updataServer() {
 	checkErr(err)
 	_ = affect
 }
-
