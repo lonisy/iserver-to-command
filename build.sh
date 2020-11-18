@@ -1,4 +1,5 @@
-go build -ldflags "-s -w" -o ~/iserver main.go
+#go build -ldflags "-s -w" -o ~/iserver main.go
+#go build -ldflags "-s -w" -o ./iserver main.go
 
 #https://studygolang.com/articles/10763
 #go build -ldflags '-w -s'
