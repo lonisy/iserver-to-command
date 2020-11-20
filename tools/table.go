@@ -26,7 +26,7 @@ type bd struct {
 
 var m = map[string]bd{
 	"ascii":       {'-', '|', '+', '+', '+', '+', '+', '+', '+', '+', '+'},
-	"box-drawing": {'═', '║', '╬', '╩', '╦', '╣', '╠', '╗', '╔', '╝', '╚'},
+	"box-drawing": {'═', '│', '╪', '╧', '╤', '╣', '╠', '╗', '╔', '╝', '╚'},
 	"box-drawing2": {'─', '│', '┼', '┴', '┬', '┤', '├', '┐', '┌', '┘', '└'},
 }
 
@@ -116,11 +116,17 @@ func table(coln []string, colw []int, rows [][]string, b bd) (table string) {
 	if len(rows) == 0 {
 		return ""
 	}
-	head := [][]rune{{b.DR}, {b.V}, {b.VR}}
+	head := [][]rune{{b.DR}, {'║'}, {b.VR}}
 	bttm := []rune{b.UR}
+	max_colw_num := len(colw)
 	for i, v := range colw {
 		head[0] = append(head[0], []rune(repeat(v+2, b.H)+string(b.HD))...)
-		head[1] = append(head[1], []rune(" "+coln[i]+repeat(v-StringLength([]rune(coln[i]))+1, ' ')+string(b.V))...)
+
+		if i == max_colw_num-1 {
+			head[1] = append(head[1], []rune(" "+coln[i]+repeat(v-StringLength([]rune(coln[i]))+1, ' ')+string('║'))...)
+		}else{
+			head[1] = append(head[1], []rune(" "+coln[i]+repeat(v-StringLength([]rune(coln[i]))+1, ' ')+string(b.V))...)
+		}
 		head[2] = append(head[2], []rune(repeat(v+2, b.H)+string(b.VH))...)
 		bttm = append(bttm, []rune(repeat(v+2, b.H)+string(b.HU))...)
 	}
@@ -130,9 +136,10 @@ func table(coln []string, colw []int, rows [][]string, b bd) (table string) {
 
 	var body [][]rune
 	max_row_num := len(rows)
-	fmt.Println(max_row_num)
+	//fmt.Println(max_row_num)
 	for ix, r := range rows {
-		row := []rune{b.V}
+		//row := []rune{b.V}
+		row := []rune{'║'}
 		//row2 := []rune{b.V}
 		row2 := []rune{'╟'} // 内表前分隔符
 		//fmt.Println(len(colw))
@@ -145,7 +152,7 @@ func table(coln []string, colw []int, rows [][]string, b bd) (table string) {
 			if i == max_colnum-1 {
 				row2 = append(row2, []rune(repeat(v+2, '─')+string('╢'))...)
 				//row = append(row, []rune(" "+r[i]+repeat(v-l+1, ' ')+string(b.V))...)
-				row = append(row, []rune(" "+r[i]+repeat(v-l+1, ' ')+string(b.V))...)
+				row = append(row, []rune(" "+r[i]+repeat(v-l+1, ' ')+string('║'))...)
 			}else{
 				row2 = append(row2, []rune(repeat(v+2, '─')+string('┼'))...)
 				row = append(row, []rune(" "+r[i]+repeat(v-l+1, ' ')+string('│'))...)
