@@ -16,10 +16,10 @@ limitations under the License.
 package cmd
 
 import (
-	"fmt"
-	"github.com/modood/table"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"iserver-to-command/tools"
+	"fmt"
 	"os"
 	"strconv"
 )
@@ -30,7 +30,6 @@ var toCmd = &cobra.Command{
 	Short: "Quickly connect to the server.",
 	Long:  `Quickly connect to the server.`,
 	Run: func(cmd *cobra.Command, args []string) {
-
 		initSqliteDb()
 
 		if len(args) != 1 {
@@ -145,9 +144,10 @@ func showServers() {
 		fmt.Println("No valid server record")
 		return
 	}
-	table.Output(ServerList)
+
+	tools.Output(ServerList)
 	//table.OutputA(ServerList)
-	s := table.Table(ServerList)
+	s := tools.Table(ServerList)
 	_ = s
 	return
 }

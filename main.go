@@ -15,7 +15,9 @@ limitations under the License.
 */
 package main
 
-import "iserver-to-command/cmd"
+import (
+	"iserver-to-command/cmd"
+)
 
 func main() {
 	cmd.Execute()

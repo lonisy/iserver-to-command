@@ -18,9 +18,9 @@ package cmd
 import (
 	"os"
 	"strings"
-
 	"github.com/spf13/cobra"
 )
+
 
 // sshCmd represents the ssh command
 var sshCmd = &cobra.Command{

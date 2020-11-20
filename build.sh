@@ -4,6 +4,9 @@
 #https://studygolang.com/articles/10763
 #go build -ldflags '-w -s'
 
+go get -u github.com/mattn/go-sqlite3
+go get -u github.com/mitchellh/go-homedir
+
 #$ upx etcd-cli
 ## 此处省略压缩时的打印...
 #$ ls -lh
